@@ -7,8 +7,102 @@
 
     /* Setup Fullscreen and Pointerlock Events */
     setupFullscreen();
+    var movement = setupMouse();
+    var keyMap = setupKeyboard();
 
     var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+
+    var Camera = CES.Component.extend({
+        name: 'camera',
+        init: function (camera) {
+            camera.rotation.set( 0, 0, 0 );
+
+            this.pitchObject = new THREE.Object3D();
+            pitchObject.add( camera );
+
+            this.yawObject = new THREE.Object3D();
+            yawObject.position.y = 10;
+            yawObject.add( pitchObject );
+
+            this.velocity = new THREE.Vector3();
+        },
+        updateYaw: function(movementX) {
+            yawObject.rotation.y -= movementX * 0.002;
+        },
+        updatePitch: function(movementY) {
+            pitchObject.rotation.x -= movementY * 0.002;
+            pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
+        }
+    });
+
+    var Mouse = CES.Component.extend({
+        name: 'mouse',
+        init: function (movement) {
+            this.movement = movement;
+        }
+    });
+
+    var Keyboard = CES.Component.extend({
+        name: 'mouse',
+        init: function (keyMap) {
+            this.keyMap = keyMap;
+        }
+    });
+
+    var player = new CES.Entity();
+    player.addComponent(new Camera(camera));
+    player.addComponent(new Mouse(movement));
+    player.addComponent(new Keyboard(keyMap));
+
+    var CameraLookingSystem = CES.System.extend({
+        update: function (dt) {
+            var entities, mouse, camera;
+
+            entities = this.world.getEntities('mouse', 'camera');
+
+            entities.forEach(function (entity) {
+                mouse = entity.getComponent('mouse');
+                camera = entity.getComponent('camera');
+                camera.updateYaw(mouse.movement.movementX);
+                camera.updatePitch(mouse.movement.movementY);
+            });
+        }
+    });
+
+    var CameraMovementSystem = CES.System.extend({
+        update: function (dt) {
+            var entities, keyboard, camera;
+
+            entities = this.world.getEntities('keyboard', 'camera');
+
+            entities.forEach(function (entity) {
+                keyboard = entity.getComponent('keyboard');
+                camera = entity.getComponent('camera');
+                
+                delta *= 0.1;
+
+                camera.velocity.x += ( - velocity.x ) * 0.08 * delta;
+                camera.velocity.z += ( - velocity.z ) * 0.08 * delta;
+
+                if ( keyboard.keyMap.moveForward ) camera.velocity.z -= 0.12 * delta;
+                if ( keyboard.keyMap.moveBackward ) camera.velocity.z += 0.12 * delta;
+
+                if ( keyboard.keyMap.moveLeft ) camera.velocity.x -= 0.12 * delta;
+                if ( keyboard.keyMap.moveRight ) camera.velocity.x += 0.12 * delta;
+
+                camera.yawObject.translateX( velocity.x );
+                camera.yawObject.translateY( velocity.y ); 
+                camera.yawObject.translateZ( velocity.z );
+            });
+        }
+    });
+
+    var world = new CES.World();
+
+    world.addEntity(player);
+
+    world.addSystem(new CameraLookingSystem());
+    world.addSystem(new CameraMovementSystem());
 
     var scene = new THREE.Scene();
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
@@ -45,40 +139,35 @@
     loop(renderer, [controls])
   });
 
-  function firstPersonCameraControls(camera) {
-    var scope = this;
+  function loop(renderer, world) {
+    var time = Date.now();
 
-    camera.rotation.set( 0, 0, 0 );
+    var frame = function() {
+      window.requestAnimationFrame(frame);
 
-    var pitchObject = new THREE.Object3D();
-    pitchObject.add( camera );
+      world.update(Date.now() - time);
 
-    var yawObject = new THREE.Object3D();
-    yawObject.position.y = 10;
-    yawObject.add( pitchObject );
+      time = Date.now();
+    };
 
-    var moveForward = false;
-    var moveBackward = false;
-    var moveLeft = false;
-    var moveRight = false;
+    frame();
+  }
 
-    var velocity = new THREE.Vector3();
-
-    var PI_2 = Math.PI / 2;
+  function setupMouse() {
+    var movement = {};
 
     var onMouseMove = function ( event ) {
-
-      if ( scope.enabled === false ) return;
-
-      var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-      var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
-      yawObject.rotation.y -= movementX * 0.002;
-      pitchObject.rotation.x -= movementY * 0.002;
-
-      pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
-
+      movement.movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
+      movement.movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
     };
+
+    document.addEventListener( 'mousemove', onMouseMove, false );
+
+    return movement;
+  }
+
+  function setupKeyboard() {
+    var keyMap = {};
 
     var onKeyDown = function ( event ) {
 
@@ -86,26 +175,21 @@
 
         case 38: // up
         case 87: // w
-          moveForward = true;
+          keyMap.moveForward = true;
           break;
 
         case 37: // left
         case 65: // a
-          moveLeft = true; break;
+          keyMap.moveLeft = true; break;
 
         case 40: // down
         case 83: // s
-          moveBackward = true;
+          keyMap.moveBackward = true;
           break;
 
         case 39: // right
         case 68: // d
-          moveRight = true;
-          break;
-
-        case 32: // space
-          if ( canJump === true ) velocity.y += 10;
-          canJump = false;
+          keyMap.moveRight = true;
           break;
 
       }
@@ -118,71 +202,32 @@
 
         case 38: // up
         case 87: // w
-          moveForward = false;
+          keyMap.moveForward = false;
           break;
 
         case 37: // left
         case 65: // a
-          moveLeft = false;
+          keyMap.moveLeft = false;
           break;
 
         case 40: // down
         case 83: // a
-          moveBackward = false;
+          keyMap.moveBackward = false;
           break;
 
         case 39: // right
         case 68: // d
-          moveRight = false;
+          keyMap.moveRight = false;
           break;
 
       }
 
     };
 
-    document.addEventListener( 'mousemove', onMouseMove, false );
     document.addEventListener( 'keydown', onKeyDown, false );
     document.addEventListener( 'keyup', onKeyUp, false );
 
-    return {
-      update: function(delta) {
-        if ( scope.enabled === false ) return;
-
-        delta *= 0.1;
-
-        velocity.x += ( - velocity.x ) * 0.08 * delta;
-        velocity.z += ( - velocity.z ) * 0.08 * delta;
-
-        if ( moveForward ) velocity.z -= 0.12 * delta;
-        if ( moveBackward ) velocity.z += 0.12 * delta;
-
-        if ( moveLeft ) velocity.x -= 0.12 * delta;
-        if ( moveRight ) velocity.x += 0.12 * delta;
-
-        yawObject.translateX( velocity.x );
-        yawObject.translateY( velocity.y ); 
-        yawObject.translateZ( velocity.z );
-      }
-      ,getObject: function() {
-        return yawObject;
-      }
-    }
-  }
-
-  function loop(renderer, objects) {
-    var time = Date.now();
-
-    var frame = function() {
-      window.requestAnimationFrame(frame);
-
-      for (var i = objects.length - 1; i >= 0; i--) {
-        objects[i].update(Date.now() - time);
-      };
-
-      time = Date.now();
-    };
-
-    frame();
+    return keyMap;
   }
 
   function setupFullscreen() {
