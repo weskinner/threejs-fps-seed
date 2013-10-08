@@ -15,23 +15,26 @@
     var Camera = CES.Component.extend({
         name: 'camera',
         init: function (camera) {
-            camera.rotation.set( 0, 0, 0 );
+            this.camera = camera;
+            this.camera.rotation.set( 0, 0, 0 );
 
             this.pitchObject = new THREE.Object3D();
-            pitchObject.add( camera );
+            this.pitchObject.add( camera );
 
             this.yawObject = new THREE.Object3D();
-            yawObject.position.y = 10;
-            yawObject.add( pitchObject );
+            this.yawObject.position.y = 10;
+            this.yawObject.add( this.pitchObject );
 
             this.velocity = new THREE.Vector3();
+
+            this.PI_2 = Math.PI / 2;
         },
         updateYaw: function(movementX) {
-            yawObject.rotation.y -= movementX * 0.002;
+            this.yawObject.rotation.y -= movementX * 0.002;
         },
         updatePitch: function(movementY) {
-            pitchObject.rotation.x -= movementY * 0.002;
-            pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, pitchObject.rotation.x ) );
+            this.pitchObject.rotation.x -= movementY * 0.002;
+            this.pitchObject.rotation.x = Math.max( - this.PI_2, Math.min( this.PI_2, this.pitchObject.rotation.x ) );
         }
     });
 
@@ -43,7 +46,7 @@
     });
 
     var Keyboard = CES.Component.extend({
-        name: 'mouse',
+        name: 'keyboard',
         init: function (keyMap) {
             this.keyMap = keyMap;
         }
@@ -70,7 +73,7 @@
     });
 
     var CameraMovementSystem = CES.System.extend({
-        update: function (dt) {
+        update: function (delta) {
             var entities, keyboard, camera;
 
             entities = this.world.getEntities('keyboard', 'camera');
@@ -81,8 +84,8 @@
                 
                 delta *= 0.1;
 
-                camera.velocity.x += ( - velocity.x ) * 0.08 * delta;
-                camera.velocity.z += ( - velocity.z ) * 0.08 * delta;
+                camera.velocity.x += ( - camera.velocity.x ) * 0.08 * delta;
+                camera.velocity.z += ( - camera.velocity.z ) * 0.08 * delta;
 
                 if ( keyboard.keyMap.moveForward ) camera.velocity.z -= 0.12 * delta;
                 if ( keyboard.keyMap.moveBackward ) camera.velocity.z += 0.12 * delta;
@@ -90,9 +93,9 @@
                 if ( keyboard.keyMap.moveLeft ) camera.velocity.x -= 0.12 * delta;
                 if ( keyboard.keyMap.moveRight ) camera.velocity.x += 0.12 * delta;
 
-                camera.yawObject.translateX( velocity.x );
-                camera.yawObject.translateY( velocity.y ); 
-                camera.yawObject.translateZ( velocity.z );
+                camera.yawObject.translateX( camera.velocity.x );
+                camera.yawObject.translateY( camera.velocity.y ); 
+                camera.yawObject.translateZ( camera.velocity.z );
             });
         }
     });
@@ -105,6 +108,7 @@
     world.addSystem(new CameraMovementSystem());
 
     var scene = new THREE.Scene();
+    scene.add(camera);
     scene.fog = new THREE.Fog( 0xffffff, 0, 750 );
 
     var light = new THREE.DirectionalLight( 0xffffff, 1.5 );
@@ -114,9 +118,6 @@
     var light = new THREE.DirectionalLight( 0xffffff, 0.75 );
     light.position.set( -1, - 0.5, -1 );
     scene.add( light );
-
-    controls = firstPersonCameraControls(camera);
-    scene.add( controls.getObject() );
 
     ray = new THREE.Raycaster();
     ray.ray.direction.set( 0, -1, 0 );
@@ -136,16 +137,20 @@
 
     document.body.appendChild( renderer.domElement );
 
-    loop(renderer, [controls])
+    renderer.render(scene, camera);
+
+    loop(renderer, world, scene, camera)
   });
 
-  function loop(renderer, world) {
+  function loop(renderer, world, scene, camera) {
     var time = Date.now();
 
     var frame = function() {
       window.requestAnimationFrame(frame);
 
       world.update(Date.now() - time);
+
+      renderer.render(scene, camera);
 
       time = Date.now();
     };
@@ -154,7 +159,7 @@
   }
 
   function setupMouse() {
-    var movement = {};
+    var movement = {movementX: 0, movementY: 0};
 
     var onMouseMove = function ( event ) {
       movement.movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
@@ -264,7 +269,7 @@
     document.addEventListener('fullscreenchange', fullscreenchange, false);
 
     $instructions.click(function(event) {
-      document.body.requestFullScreen();
+      document.body.requestPointerLock();
     })
   }
 
