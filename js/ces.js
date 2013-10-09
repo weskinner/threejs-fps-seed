@@ -34,7 +34,8 @@ function SetupCES (camera, movement, keyMap) {
   Game.Component.Mouse = CES.Component.extend({
     name: 'mouse',
     init: function (movement) {
-      this.movement = movement;
+      this.movementX = 0;
+      this.movementY = 0;
     }
   });
 
