@@ -7,105 +7,8 @@
 
     /* Setup Fullscreen and Pointerlock Events */
     setupFullscreen();
-    var movement = setupMouse();
-    var keyMap = setupKeyboard();
 
     var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-
-    var Camera = CES.Component.extend({
-        name: 'camera',
-        init: function (camera) {
-            this.camera = camera;
-            this.camera.rotation.set( 0, 0, 0 );
-
-            this.pitchObject = new THREE.Object3D();
-            this.pitchObject.add( camera );
-
-            this.yawObject = new THREE.Object3D();
-            this.yawObject.position.y = 10;
-            this.yawObject.add( this.pitchObject );
-
-            this.velocity = new THREE.Vector3();
-
-            this.PI_2 = Math.PI / 2;
-        },
-        updateYaw: function(movementX) {
-            this.yawObject.rotation.y -= movementX * 0.002;
-        },
-        updatePitch: function(movementY) {
-            this.pitchObject.rotation.x -= movementY * 0.002;
-            this.pitchObject.rotation.x = Math.max( - this.PI_2, Math.min( this.PI_2, this.pitchObject.rotation.x ) );
-        }
-    });
-
-    var Mouse = CES.Component.extend({
-        name: 'mouse',
-        init: function (movement) {
-            this.movement = movement;
-        }
-    });
-
-    var Keyboard = CES.Component.extend({
-        name: 'keyboard',
-        init: function (keyMap) {
-            this.keyMap = keyMap;
-        }
-    });
-
-    var player = new CES.Entity();
-    player.addComponent(new Camera(camera));
-    player.addComponent(new Mouse(movement));
-    player.addComponent(new Keyboard(keyMap));
-
-    var CameraLookingSystem = CES.System.extend({
-        update: function (dt) {
-            var entities, mouse, camera;
-
-            entities = this.world.getEntities('mouse', 'camera');
-
-            entities.forEach(function (entity) {
-                mouse = entity.getComponent('mouse');
-                camera = entity.getComponent('camera');
-                camera.updateYaw(mouse.movement.movementX);
-                camera.updatePitch(mouse.movement.movementY);
-            });
-        }
-    });
-
-    var CameraMovementSystem = CES.System.extend({
-        update: function (delta) {
-            var entities, keyboard, camera;
-
-            entities = this.world.getEntities('keyboard', 'camera');
-
-            entities.forEach(function (entity) {
-                keyboard = entity.getComponent('keyboard');
-                camera = entity.getComponent('camera');
-                
-                delta *= 0.1;
-
-                camera.velocity.x += ( - camera.velocity.x ) * 0.08 * delta;
-                camera.velocity.z += ( - camera.velocity.z ) * 0.08 * delta;
-
-                if ( keyboard.keyMap.moveForward ) camera.velocity.z -= 0.12 * delta;
-                if ( keyboard.keyMap.moveBackward ) camera.velocity.z += 0.12 * delta;
-
-                if ( keyboard.keyMap.moveLeft ) camera.velocity.x -= 0.12 * delta;
-                if ( keyboard.keyMap.moveRight ) camera.velocity.x += 0.12 * delta;
-
-                camera.yawObject.translateX( camera.velocity.x );
-                camera.yawObject.translateY( camera.velocity.y ); 
-                camera.yawObject.translateZ( camera.velocity.z );
-            });
-        }
-    });
-
-    var world = new CES.World();
-
-    world.addEntity(player);
-
-    world.addSystem(new CameraLookingSystem());
-    world.addSystem(new CameraMovementSystem());
 
     var scene = new THREE.Scene();
     scene.add(camera);
@@ -139,16 +42,20 @@
 
     renderer.render(scene, camera);
 
-    loop(renderer, world, scene, camera)
+    startGame(renderer, scene, camera)
   });
 
-  function loop(renderer, world, scene, camera) {
+  function startGame(renderer, scene, camera) {
     var time = Date.now();
+
+    var movement = setupMouse();
+    var keyMap = setupKeyboard();
+    var updateCES = SetupCES(camera, movement, keyMap);
 
     var frame = function() {
       window.requestAnimationFrame(frame);
 
-      world.update(Date.now() - time);
+      updateCES(Date.now() - time);
 
       renderer.render(scene, camera);
 
