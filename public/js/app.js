@@ -3,10 +3,8 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
   var bodyElement = document.body
       , $container = $('#container')
       , $instructions = $('#instructions')
-      , movement = {movementX: 0, movementY: 0}
-      , keyMap = {}
       , lookingSystem = new cameraLookingSystem()
-      , movementSystem = new (cameraMovementSystem(keyMap))();
+      , movementSystem = new cameraMovementSystem();
 
   var pointerlockchange = function(event) {
     if(document.pointerLockElement === bodyElement) {
@@ -32,64 +30,6 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
   $instructions.click(function(event) {
     document.body.requestPointerLock();
   });
-
-  var onKeyDown = function ( event ) {
-
-    switch ( event.keyCode ) {
-
-      case 38: // up
-      case 87: // w
-        keyMap.moveForward = true;
-        break;
-
-      case 37: // left
-      case 65: // a
-        keyMap.moveLeft = true; break;
-
-      case 40: // down
-      case 83: // s
-        keyMap.moveBackward = true;
-        break;
-
-      case 39: // right
-      case 68: // d
-        keyMap.moveRight = true;
-        break;
-
-    }
-
-  };
-
-  var onKeyUp = function ( event ) {
-
-    switch( event.keyCode ) {
-
-      case 38: // up
-      case 87: // w
-        keyMap.moveForward = false;
-        break;
-
-      case 37: // left
-      case 65: // a
-        keyMap.moveLeft = false;
-        break;
-
-      case 40: // down
-      case 83: // a
-        keyMap.moveBackward = false;
-        break;
-
-      case 39: // right
-      case 68: // d
-        keyMap.moveRight = false;
-        break;
-
-    }
-
-  };
-
-  document.addEventListener( 'keydown', onKeyDown, false );
-  document.addEventListener( 'keyup', onKeyUp, false );
 
 
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );

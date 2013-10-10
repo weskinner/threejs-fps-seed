@@ -2,7 +2,7 @@ var bogart = require('bogart');
 
 var router = bogart.router();
 router.get('/', function(req) { 
-  return "hello world"; 
+  return bogart.redirect("/index.html"); 
 });
 
 var app = bogart.app();

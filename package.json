@@ -1,0 +1,9 @@
+{
+  "name": "threjs-fps-seed",
+  "version": "0.1.0",
+  "author": "William Skinner <skinner89@gmail.com>",
+  "description": "Seed project for starting a first person shooter in three.js",
+  "dependencies": {
+    "bogart": "~0.5.9"
+  }
+}

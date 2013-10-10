@@ -1,9 +1,57 @@
-define(function() {
-  return function(input) {
+define(['js/wrapper/document'],
+  function(document) {
     return CES.System.extend({
+      init: function() {
+        var keyMap = this.keyMap = {};
+
+        var onKeyDown = function ( event ) {
+          switch ( event.keyCode ) {
+            case 38: // up
+            case 87: // w
+              keyMap.moveForward = true;
+              break;
+            case 37: // left
+            case 65: // a
+              keyMap.moveLeft = true; break;
+            case 40: // down
+            case 83: // s
+              keyMap.moveBackward = true;
+              break;
+            case 39: // right
+            case 68: // d
+              keyMap.moveRight = true;
+              break;
+          }
+        };
+
+        var onKeyUp = function ( event ) {
+          switch( event.keyCode ) {
+            case 38: // up
+            case 87: // w
+              keyMap.moveForward = false;
+              break;
+            case 37: // left
+            case 65: // a
+              keyMap.moveLeft = false;
+              break;
+            case 40: // down
+            case 83: // a
+              keyMap.moveBackward = false;
+              break;
+            case 39: // right
+            case 68: // d
+              keyMap.moveRight = false;
+              break;
+          }
+        };
+
+        document.addEventListener( 'keydown', onKeyDown, false );
+        document.addEventListener( 'keyup', onKeyUp, false );
+      },
       update: function (delta) {
         if(!this.disabled) {
-          var entities, camera;
+          var entities, camera
+            , input = this.keyMap;
 
           entities = this.world.getEntities('camera');
 
@@ -29,5 +77,4 @@ define(function() {
       },
       disabled: true
     });
-  }
 });
