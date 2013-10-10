@@ -5,7 +5,7 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
       , $instructions = $('#instructions')
       , movement = {movementX: 0, movementY: 0}
       , keyMap = {}
-      , lookingSystem = new (cameraLookingSystem(movement))()
+      , lookingSystem = new cameraLookingSystem()
       , movementSystem = new (cameraMovementSystem(keyMap))();
 
   var pointerlockchange = function(event) {
@@ -90,13 +90,6 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
 
   document.addEventListener( 'keydown', onKeyDown, false );
   document.addEventListener( 'keyup', onKeyUp, false );
-
-  var onMouseMove = function ( event ) {
-    movement.movementX = event.movementX;
-    movement.movementY = event.movementY;
-  };
-
-  document.addEventListener( 'mousemove', onMouseMove, false );
 
 
   camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 1000 );

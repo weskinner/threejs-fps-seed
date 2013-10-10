@@ -1,14 +1,23 @@
 define(['js/wrapper/document'],
   function(document) {
-  return function(mouse) {
     return CES.System.extend({
       init: function() {
-        console.log('looking system');
-      }
+        var self = this;
+
+        this.mouse = {};
+
+        var onMouseMove = function ( event ) {
+          self.mouse.movementX = event.movementX;
+          self.mouse.movementY = event.movementY;
+        };
+
+        document.addEventListener( 'mousemove', onMouseMove, false );
+      },
       update: function (dt) {
         if(!this.disabled) {
-          var entities, camera;
-
+          var entities
+            , camera
+            , mouse = this.mouse;
           entities = this.world.getEntities('camera');
 
           entities.forEach(function (entity) {
@@ -21,4 +30,4 @@ define(['js/wrapper/document'],
       disabled : true
     });
   }
-});
+);
