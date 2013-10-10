@@ -18,11 +18,11 @@ define((function() {
 
       this.PI_2 = Math.PI / 2;
     },
-    updateYaw: function(movementX) {
-      this.yawObject.rotation.y -= movementX * 0.002;
+    updateYaw: function(radians) {
+      this.yawObject.rotation.y += radians;
     },
-    updatePitch: function(movementY) {
-      this.pitchObject.rotation.x -= movementY * 0.002;
+    updatePitch: function(radians) {
+      this.pitchObject.rotation.x += radians;
       this.pitchObject.rotation.x = Math.max( - this.PI_2, Math.min( this.PI_2, this.pitchObject.rotation.x ) );
     }
   });

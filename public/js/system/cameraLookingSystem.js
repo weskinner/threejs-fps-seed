@@ -22,8 +22,10 @@ define(['js/wrapper/document'],
 
           entities.forEach(function (entity) {
             camera = entity.getComponent('camera');
-            camera.updateYaw(mouse.movementX);
-            camera.updatePitch(mouse.movementY);
+            var yawRotation = -(mouse.movementX * 0.002);
+            camera.updateYaw(yawRotation);
+            var pitchRotation = -(mouse.movementY * 0.002);
+            camera.updatePitch(pitchRotation);
           });
         }
       },
