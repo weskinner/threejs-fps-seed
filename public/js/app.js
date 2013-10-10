@@ -116,7 +116,8 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
 
   material = new THREE.MeshBasicMaterial( { vertexColors: THREE.VertexColors } );
 
-  var groundTexture = new THREE.ImageUtils.loadTexture("public/image/cracked_flats_ground.jpg");
+  var groundTexture = new THREE.ImageUtils.loadTexture("/image/cracked_flats_ground.jpg");
+
   var groundMaterial = new THREE.MeshBasicMaterial({map: groundTexture});
 
   mesh = new THREE.Mesh( geometry, groundMaterial );
