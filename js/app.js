@@ -2,14 +2,22 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
   function(cameraComp, cameraLookingSystem, cameraMovementSystem) {
   var bodyElement = document.body
       , $container = $('#container')
-      , $instructions = $('#instructions');
+      , $instructions = $('#instructions')
+      , movement = {movementX: 0, movementY: 0}
+      , keyMap = {}
+      , lookingSystem = new (cameraLookingSystem(movement))()
+      , movementSystem = new (cameraMovementSystem(keyMap))();
 
   var pointerlockchange = function(event) {
     if(document.pointerLockElement === bodyElement) {
       // entering pointer lock
+      lookingSystem.disabled = false;
+      movementSystem.disabled = false;
       $container.hide();
     } else {
       // leaving pointer lock
+      lookingSystem.disabled = true;
+      movementSystem.disabled = true;
       $container.show();
     }
   };
@@ -23,9 +31,7 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
 
   $instructions.click(function(event) {
     document.body.requestPointerLock();
-  })
-
-  var keyMap = {};
+  });
 
   var onKeyDown = function ( event ) {
 
@@ -84,8 +90,6 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
 
   document.addEventListener( 'keydown', onKeyDown, false );
   document.addEventListener( 'keyup', onKeyUp, false );
-
-  var movement = {movementX: 0, movementY: 0};
 
   var onMouseMove = function ( event ) {
     movement.movementX = event.movementX;
@@ -167,8 +171,8 @@ requirejs(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/ca
 
   world.addEntity(player);
 
-  world.addSystem(new (cameraLookingSystem(movement))());
-  world.addSystem(new (cameraMovementSystem(keyMap))());
+  world.addSystem(lookingSystem);
+  world.addSystem(movementSystem);
 
   var lastTime = Date.now();
   var render = function () {
