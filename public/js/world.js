@@ -49,7 +49,7 @@ define(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/camer
         world.addSystem(lookingSystem);
         world.addSystem(movementSystem);
 
-        this.enabled = true;
+        this.enabled = false;
       },
       update: function(dt) {
         if(this.enabled) {
