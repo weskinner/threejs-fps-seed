@@ -4,7 +4,7 @@ define(['js/wrapper/document'],
       init: function() {
         var self = this;
 
-        this.mouse = {};
+        this.mouse = {movementX: 0, movementY: 0};
 
         var onMouseMove = function ( event ) {
           self.mouse.movementX = event.movementX;
@@ -29,7 +29,7 @@ define(['js/wrapper/document'],
           });
         }
       },
-      disabled : true
+      disabled : false
     });
   }
 );

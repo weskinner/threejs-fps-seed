@@ -75,6 +75,6 @@ define(['js/wrapper/document'],
           });
         };
       },
-      disabled: true
+      disabled: false
     });
 });
