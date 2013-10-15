@@ -1,5 +1,6 @@
-define(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/cameraMovementSystem', 'js/wrapper/document'],
-	function(cameraComp, cameraLookingSystem, cameraMovementSystem, document) {
+define(['js/component/body', 'js/component/eyes', 'js/component/velocity', 'js/system/cameraLookingSystem', 'js/system/cameraMovementSystem', 'js/wrapper/document'],
+	function(BodyComponent, EyesComponent, VelocityComponent,
+    cameraLookingSystem, cameraMovementSystem, document) {
 		return {
       setup: function() {
         var lookingSystem = new cameraLookingSystem()
@@ -40,7 +41,10 @@ define(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/camer
         document.body.appendChild( renderer.domElement );
 
         var player = new CES.Entity();
-        player.addComponent(new cameraComp(scene, camera));
+        var eyes = new EyesComponent(scene, camera);
+        player.addComponent(eyes);
+        player.addComponent(new BodyComponent(scene, eyes.getObject()));
+        player.addComponent(new VelocityComponent());
 
         var world = this.ces = new CES.World();
 
@@ -54,6 +58,11 @@ define(['js/component/camera', 'js/system/cameraLookingSystem', 'js/system/camer
       update: function(dt) {
         if(this.enabled) {
           this.ces.update(dt);
+          /*
+           * - Update velocity from intent
+           * - Update view orientation from intent
+           * - Update view position from velocity
+           */
           this.renderer.render(this.scene, this.camera);
         }
       },

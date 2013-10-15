@@ -2,16 +2,7 @@ define(['js/wrapper/document'],
   function(document) {
     return CES.System.extend({
       init: function() {
-        var self = this;
-
-        this.mouse = {movementX: 0, movementY: 0};
-
-        var onMouseMove = function ( event ) {
-          self.mouse.movementX = event.movementX;
-          self.mouse.movementY = event.movementY;
-        };
-
-        document.addEventListener( 'mousemove', onMouseMove, false );
+        
       },
       update: function (dt) {
         if(!this.disabled) {

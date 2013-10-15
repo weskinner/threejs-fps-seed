@@ -1,6 +1,6 @@
 define((function() {
-  var Camera = CES.Component.extend({
-    name: 'camera',
+  var view = CES.Component.extend({
+    name: 'view',
     init: function (scene, camera) {
       this.camera = camera;
       this.camera.rotation.set( 0, 0, 0 );
@@ -14,8 +14,6 @@ define((function() {
 
       scene.add(this.yawObject);
 
-      this.velocity = new THREE.Vector3();
-
       this.PI_2 = Math.PI / 2;
     },
     updateYaw: function(radians) {
@@ -24,10 +22,13 @@ define((function() {
     updatePitch: function(radians) {
       this.pitchObject.rotation.x += radians;
       this.pitchObject.rotation.x = Math.max( - this.PI_2, Math.min( this.PI_2, this.pitchObject.rotation.x ) );
+    },
+    getObject: function() {
+      return this.yawObject;
     }
   });
 
   return function() {
-    return Camera;
+    return view;
   }
 })());
