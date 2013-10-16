@@ -11,7 +11,7 @@ define(
       this.pitchObject.add( camera );
 
       this.yawObject = new THREE.Object3D();
-      this.yawObject.add(pitchObject);
+      this.yawObject.add(this.pitchObject);
 
       this.sceneObject = new THREE.Object3D();
       this.sceneObject.position.y = 10;
@@ -76,27 +76,31 @@ define(
     }
 
     Player.prototype.update = function(dt) {
-      var self = this;
+      var self = this
         , PI_2 = Math.PI / 2;
+
+      self.velocity.z += (-self.velocity.z) * 0.1;
+      self.velocity.x += (-self.velocity.x) * 0.1;
 
       if ( self.intent.moveForward ) self.velocity.z -= 0.12 * dt;
       if ( self.intent.moveBackward ) self.velocity.z += 0.12 * dt;
       if ( self.intent.moveLeft ) self.velocity.x -= 0.12 * dt;
       if ( self.intent.moveRight ) self.velocity.x += 0.12 * dt;
 
-      self.sceneObject.translateX( self.velocity.x );
-      self.sceneObject.translateY( self.velocity.y ); 
-      self.sceneObject.translateZ( self.velocity.z );
+      self.yawObject.translateX( self.velocity.x );
+      self.yawObject.translateY( self.velocity.y ); 
+      self.yawObject.translateZ( self.velocity.z );
 
-      var yawRotation = -(intent.yaw * 0.002);
+      var yawRotation = -(self.intent.yaw * 0.002);
       this.yawObject.rotation.y += yawRotation;
-      var pitchRotation = -(intent.pitch * 0.002);
+      var pitchRotation = -(self.intent.pitch * 0.002);
       this.pitchObject.rotation.x += pitchRotation;
       this.pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, this.pitchObject.rotation.x ) );
     }
 
     return function() {
-      return new Player(arguments);
+      Player.apply(this, arguments);
+      this.__proto__ = Player.prototype;
     }
   }
 );

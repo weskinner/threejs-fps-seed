@@ -3,6 +3,7 @@ requirejs(['js/world'],
   var bodyElement = document.body
       , $container = $('#container')
       , $instructions = $('#instructions')
+      , dt;
 
   var pointerlockchange = function(event) {
     if(document.pointerLockElement === bodyElement) {
@@ -33,7 +34,8 @@ requirejs(['js/world'],
   var render = function () {
     requestAnimationFrame(render);
 
-    world.update(Date.now() - lastTime);
+    dt = (Date.now() - lastTime) * 0.1;
+    world.update(dt);
 
     lastTime = Date.now();
   };
