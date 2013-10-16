@@ -25,9 +25,9 @@ define([],
             view = entity.getComponent('view');
 
             var yawRotation = -(intent.yaw * 0.002);
-            camera.updateYaw(yawRotation);
+            view.updateYaw(yawRotation);
             var pitchRotation = -(intent.pitch * 0.002);
-            camera.updatePitch(pitchRotation);
+            view.updatePitch(pitchRotation);
           });
         }
       },

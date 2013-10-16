@@ -1,6 +1,5 @@
-define(['js/component/body', 'js/component/eyes', 'js/component/velocity', 'js/system/cameraLookingSystem', 'js/system/cameraMovementSystem', 'js/wrapper/document'],
-	function(BodyComponent, EyesComponent, VelocityComponent,
-    cameraLookingSystem, cameraMovementSystem, document) {
+define(['js/entity/player','js/system/cameraLookingSystem', 'js/system/cameraMovementSystem', 'js/wrapper/document'],
+	function(PlayerEntity, cameraLookingSystem, cameraMovementSystem, document) {
 		return {
       setup: function() {
         var lookingSystem = new cameraLookingSystem()
@@ -40,11 +39,7 @@ define(['js/component/body', 'js/component/eyes', 'js/component/velocity', 'js/s
 
         document.body.appendChild( renderer.domElement );
 
-        var player = new CES.Entity();
-        var eyes = new EyesComponent(scene, camera);
-        player.addComponent(eyes);
-        player.addComponent(new BodyComponent(scene, eyes.getObject()));
-        player.addComponent(new VelocityComponent());
+        var player = new PlayerEntity(scene, camera);
 
         var world = this.ces = new CES.World();
 
