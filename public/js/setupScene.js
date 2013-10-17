@@ -24,5 +24,7 @@ define(function() {
 
     var mesh = new THREE.Mesh( geometry, groundMaterial );
     scene.add( mesh );
+
+    return mesh;
   };
 });

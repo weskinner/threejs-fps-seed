@@ -1,106 +1,82 @@
 define(
-  []
-  ,function() {
-    function Player(scene, camera) {
-      var self = this;
+['js/collisionSystem', 'js/intent', 'js/entity/rifle'],
+function(CollisionSystem, getIntent, Rifle) {
+  function Player(scene, camera) {
+    var self = this;
 
-      this.camera = camera;
-      this.camera.rotation.set( 0, 0, 0 );
+    this.height = 10;
 
-      this.pitchObject = new THREE.Object3D();
-      this.pitchObject.add( camera );
+    this.camera = camera;
+    this.camera.rotation.set( 0, 0, 0 );
 
-      this.yawObject = new THREE.Object3D();
-      this.yawObject.add(this.pitchObject);
+    this.pitchObject = new THREE.Object3D();
+    this.pitchObject.add( camera );
 
-      this.sceneObject = new THREE.Object3D();
-      this.sceneObject.position.y = 10;
-      this.sceneObject.add( this.yawObject );
+    this.yawObject = new THREE.Object3D();
+    this.yawObject.position.y = this.height;
+    this.yawObject.add(this.pitchObject);
 
-      scene.add(this.sceneObject);
+    this.velocity = new THREE.Vector3();
+    this.canJump = true;
 
-      this.velocity = new THREE.Vector3();
+    this.weapon = new Rifle();
+    var rifleObject = this.weapon.getObject();
+    rifleObject.position.y += 3;
+    this.yawObject.add(rifleObject);
 
-      self.intent = {};
-
-      var onKeyDown = function ( event ) {
-        switch ( event.keyCode ) {
-          case 38: // up
-          case 87: // w
-            self.intent.moveForward = true;
-            break;
-          case 37: // left
-          case 65: // a
-            self.intent.moveLeft = true; break;
-          case 40: // down
-          case 83: // s
-            self.intent.moveBackward = true;
-            break;
-          case 39: // right
-          case 68: // d
-            self.intent.moveRight = true;
-            break;
-        }
-      };
-
-      var onKeyUp = function ( event ) {
-        switch( event.keyCode ) {
-          case 38: // up
-          case 87: // w
-            self.intent.moveForward = false;
-            break;
-          case 37: // left
-          case 65: // a
-            self.intent.moveLeft = false;
-            break;
-          case 40: // down
-          case 83: // a
-            self.intent.moveBackward = false;
-            break;
-          case 39: // right
-          case 68: // d
-            self.intent.moveRight = false;
-            break;
-        }
-      };
-
-      document.addEventListener( 'keydown', onKeyDown, false );
-      document.addEventListener( 'keyup', onKeyUp, false );
-
-      var onMouseMove = function ( event ) {
-        self.intent.yaw = event.movementX;
-        self.intent.pitch = event.movementY;
-      };
-
-      document.addEventListener( 'mousemove', onMouseMove, false );
-    }
-
-    Player.prototype.update = function(dt) {
-      var self = this
-        , PI_2 = Math.PI / 2;
-
-      self.velocity.z += (-self.velocity.z) * 0.1;
-      self.velocity.x += (-self.velocity.x) * 0.1;
-
-      if ( self.intent.moveForward ) self.velocity.z -= 0.12 * dt;
-      if ( self.intent.moveBackward ) self.velocity.z += 0.12 * dt;
-      if ( self.intent.moveLeft ) self.velocity.x -= 0.12 * dt;
-      if ( self.intent.moveRight ) self.velocity.x += 0.12 * dt;
-
-      self.yawObject.translateX( self.velocity.x );
-      self.yawObject.translateY( self.velocity.y ); 
-      self.yawObject.translateZ( self.velocity.z );
-
-      var yawRotation = -(self.intent.yaw * 0.002);
-      this.yawObject.rotation.y += yawRotation;
-      var pitchRotation = -(self.intent.pitch * 0.002);
-      this.pitchObject.rotation.x += pitchRotation;
-      this.pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, this.pitchObject.rotation.x ) );
-    }
-
-    return function() {
-      Player.apply(this, arguments);
-      this.__proto__ = Player.prototype;
-    }
+    scene.add(this.yawObject);
   }
-);
+
+  Player.prototype.update = function(dt) {
+    var self = this
+      , PI_2 = Math.PI / 2
+      , intent = getIntent();
+
+
+    // dampen movement
+    self.velocity.z += (-self.velocity.z) * 0.1;
+    self.velocity.x += (-self.velocity.x) * 0.1;
+
+    // movement input
+    if ( intent.moveForward ) self.velocity.z -= 0.3 * dt;
+    if ( intent.moveBackward ) self.velocity.z += 0.3 * dt;
+    if ( intent.moveLeft ) self.velocity.x -= 0.3 * dt;
+    if ( intent.moveRight ) self.velocity.x += 0.3 * dt;
+    if ( intent.jump && this.canJump ) {
+      this.canJump = false;
+      self.velocity.y += 1 * dt;
+    }
+
+    // update view orientation
+    var yawRotation = -(intent.yaw * 0.002);
+    this.yawObject.rotation.y += yawRotation;
+    var pitchRotation = -(intent.pitch * 0.002);
+    this.pitchObject.rotation.x += pitchRotation;
+
+    // restrict view from looking further than straight up or down
+    this.pitchObject.rotation.x = Math.max( - PI_2, Math.min( PI_2, this.pitchObject.rotation.x ) );
+
+    // apply gravity
+    self.velocity.y -= 0.1;
+
+    // check for ground collision
+    var groundCollisionRay = new THREE.Raycaster(this.yawObject.position, new THREE.Vector3(0,-1,0), 1, this.height);
+    var intersects = CollisionSystem.getIntersects(groundCollisionRay);
+    for (var i = intersects.length - 1; i >= 0; i--) {
+      var intersect = intersects[i]
+      if(intersect.distance < this.height)
+      {
+        this.canJump = false;
+        self.velocity.y = 0;
+        self.yawObject.position.y = intersect.point.y += this.height;
+      }
+    };
+
+    // update velocity translated into view space
+    self.yawObject.translateX( self.velocity.x );
+    self.yawObject.translateY( self.velocity.y ); 
+    self.yawObject.translateZ( self.velocity.z );
+  }
+
+  return Player;
+});
